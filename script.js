@@ -1,40 +1,41 @@
-// Handle form submission
-document.getElementById("uploadForm").addEventListener("submit", (e) => {
-  e.preventDefault();
+function handleSubmit(event) {
+  event.preventDefault() // Prevent form submission to keep the page from reloading
 
-  // Get inputs
-  const imageInput = document.getElementById("imageUpload");
-  const textInput = document.getElementById("textInput").value;
+  // Get form data
+  const grievanceText = document.getElementById("grievanceText").value
+  const locationText = document.getElementById("locationText").value
+  const grievanceUpload = document.getElementById("grievanceUpload").files[0]
 
-  if (imageInput.files.length > 0) {
-    const reader = new FileReader();
-    reader.onload = function () {
-      // Store data in sessionStorage
-      sessionStorage.setItem("uploadedImage", reader.result);
-      sessionStorage.setItem("uploadedText", textInput);
+  // Create a new URL for the new page (or you can open a new window)
+  const newWindow = window.open("", "_blank") // Open a blank window
 
-      // Redirect to the display page
-      window.location.href = "display.html";
-    };
-    reader.readAsDataURL(imageInput.files[0]);
-  } else {
-    alert("Please upload an image before submitting.");
+  // Create HTML content to display the grievance details
+  let content = `
+    <h1>Grievance Submitted</h1>
+    <p><strong>Grievance:</strong> ${grievanceText}</p>
+    <p><strong>Location:</strong> ${locationText}</p>
+  `
+
+  // If a file was uploaded, add it to the content
+  if (grievanceUpload) {
+    content += `<p><strong>Supporting Document:</strong> ${grievanceUpload.name}</p>`
+
+    // If the uploaded file is an image, display it
+    if (grievanceUpload.type.startsWith("image/")) {
+      const reader = new FileReader()
+      reader.onload = function (e) {
+        const imageSrc = e.target.result
+        content += `<p><strong>Uploaded Image:</strong></p><img src="${imageSrc}" alt="Uploaded Image" style="max-width: 500px; max-height: 500px;"/><br>`
+        // Write the content to the new window
+        newWindow.document.write(content)
+        newWindow.document.close()
+      }
+      reader.readAsDataURL(grievanceUpload) // Read the image as a data URL
+      return // Exit the function while the image is being loaded
+    }
   }
-});
 
-// Display submitted data on the display page
-if (window.location.pathname.includes("display.html")) {
-  const submittedImage = document.getElementById("submittedImage");
-  const submittedText = document.getElementById("submittedText");
-
-  const imageSrc = sessionStorage.getItem("uploadedImage");
-  const textContent = sessionStorage.getItem("uploadedText");
-
-  if (imageSrc && textContent) {
-    submittedImage.src = imageSrc;
-    submittedText.textContent = textContent;
-  } else {
-    alert("No data found. Please go back and submit the form.");
-    window.location.href = "upload.html";
-  }
+  // Write the content to the new window (for non-image files or after image is loaded)
+  newWindow.document.write(content)
+  newWindow.document.close()
 }
